@@ -1,3 +1,5 @@
+package backend
+
 import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, OneForOneStrategy, Props}
 import akka.event.LoggingAdapter

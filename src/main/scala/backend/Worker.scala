@@ -1,6 +1,8 @@
-import Snapshot.States
+package backend
+
 import akka.actor._
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
+import backend.Snapshot.States
 import messages._
 
 import scala.util.Random

@@ -1,5 +1,8 @@
+package frontend
+
 import java.util.concurrent.TimeUnit
 
+import ai.bale.inter.Helper
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.cluster.sharding.ClusterSharding
 import akka.pattern._
@@ -7,47 +10,19 @@ import akka.util.Timeout
 import messages._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.{Failure, Success}
+import scala.util.Success
 
 object Frontend {
   def main(args: Array[String]): Unit = {
     try {
       implicit val system: ActorSystem = ActorSystem("ClusterSystem", Helper.createConfig(2552, "frontend", "frontend"))
-
-      def printer(m: Any): Unit = system.log.info(m.toString)
-
-      val actor = system.actorOf(Props(classOf[Frontend]), "Client")
+      implicit val actor: ActorRef = system.actorOf(Props(classOf[Frontend]), "Client")
       implicit val timeout: Timeout = Timeout(10, TimeUnit.SECONDS)
       implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-      while (true) { // TODO refactor to tailRecursive
-        val console = scala.io.StdIn.readLine()
-        val operator = console.split(" ")
+      implicit def printer(m: Any): Unit = system.log.info(m.toString)
 
-        if (operator(0) == "get" && operator.length == 2)
-          (actor ? GetItem(operator(1))).mapTo[ResultMessage] onComplete {
-            case Success(value) => printer(value.toString)
-            case e => printer(e.toString)
-          }
-
-        else if (operator(0) == "set" && operator.length == 3)
-          (actor ? Set(operator(1), operator(2))).mapTo[ResultMessage] onComplete {
-            case Success(value) => printer(value.toString)
-            case e => printer(e.toString)
-          }
-
-        else if (operator(0) == "remove" && operator.length == 2)
-          (actor ? Remove(operator(1))).mapTo[ResultMessage] onComplete {
-            case Success(value) => printer(value.toString)
-            case e => printer(e.toString)
-          }
-
-        else if (operator(0) == "getall" && operator.length == 1)
-          (actor ? GetAll).mapTo[ResultMessage] onComplete {
-            case Success(value) => printer(value.toString)
-            case e => printer(e.toString)
-          }
-      }
+      getCommand()
     }
     catch {
       case msg: Exception =>
@@ -55,24 +30,21 @@ object Frontend {
     }
   }
 
-  //  def show(r: Future[Any])(implicit ex: ExecutionContextExecutor): Unit = {
-  //    r onComplete {
-  //      case Success(value)
-  //      => println(value.toString)
-  //      case Failure(exception)
-  //      => println(exception.toString)
-  //    }
-  //  }
-
-  //Request timeout
-
+  @scala.annotation.tailrec
+  def getCommand()(implicit actor: ActorRef, timeout: Timeout, printer: Any => Unit, ec: ExecutionContextExecutor): Unit = {
+    val console = scala.io.StdIn.readLine()
+    (actor ? Helper.commandToOperatorMessage(console)).mapTo[ResultMessage] onComplete {
+      case Success(value) => printer(value.toString)
+      case e => printer(e.toString)
+    }
+    getCommand()
+  }
 }
 
 class Frontend extends Actor {
   val cluster = ClusterSharding(context.system)
 
   var backendNodes: IndexedSeq[ActorRef] = IndexedSeq.empty[ActorRef] //TODO refactor to fp
-  var jobCounter = 0 //TODO refactor to fp
 
   def printer(m: Any): Unit = context.system.log.info(m.toString)
 
@@ -82,7 +54,7 @@ class Frontend extends Actor {
   implicit val executionContext: ExecutionContextExecutor = context.system.dispatcher
 
   def receive: PartialFunction[Any, Unit] = {
-    case result: ResultMessage => //debug
+    case result: ResultMessage => //debug //useless
       printer(result)
 
     case BackendRegistration if !backendNodes.contains(sender()) =>
@@ -101,9 +73,11 @@ class Frontend extends Actor {
       forwardAndSharing(msg, sender())
   }
 
+  var jobCounter = 0 // ???
+
   def forwardAndSharing(msg: OperatorMessage, replyTo: ActorRef
                         , previousValue: ResultMessage = SuccessJob("")
-                        , counter: Int = 1): Future[Any] = {
+                        , counter: Int = backendNodes.size): Future[Any] = {
     jobCounter += 1
     (backendNodes(jobCounter % backendNodes.size) ? msg).mapTo[ResultMessage] map {
       case currentValue: SuccessJob =>
