@@ -7,16 +7,14 @@ class Worker extends PersistentActor with ActorLogging {
 
   def persistenceId: String = "PersistenceId-" + self.path.name
 
-//  println(self.path.toString)
-
   def receiveCommand: Receive = {
-    case "print" => println("current state = " + Persist.state)
+    case "print" => context.system.log.info("current state = " + Persist.state)
     case "snap" => saveSnapshot(Persist.state)
-    case SaveSnapshotSuccess(metadata) => // ...
-    case SaveSnapshotFailure(metadata, reason) => // ...
-    case msg: Set =>
+    //    case SaveSnapshotSuccess(metadata) => // ...
+    //    case SaveSnapshotFailure(metadata, reason) => // ...
+    case msg: messages.Set =>
       persist(msg) { m =>
-        Persist.state = Persist.state.updatedAdd(Set(m.key, m.value))
+        Persist.state = Persist.state.updatedAdd(messages.Set(m.key, m.value))
       }
       sender() ! SuccessJob("Added")
 
@@ -26,22 +24,18 @@ class Worker extends PersistentActor with ActorLogging {
       }
       sender() ! SuccessJob("Removed")
 
-    case msg: GetItem =>
-      sender() ! SuccessJob(Persist.state.getItem(GetItem(msg.key)).toString)
-    //      context.system.log.info(Shard.state.getItem(G(msg.key)))
+    case msg: GetItem => sender() ! Persist.state.getItem(GetItem(msg.key))
 
-    case GetAll =>
-      sender() ! SuccessJob(Persist.state.getAll.toString)
-    //      context.system.log.info(Shard.state.getAll)
+    case GetAll => sender() ! Persist.state.getAll
   }
 
   def receiveRecover: Receive = {
     case SnapshotOffer(_, s: States) =>
       context.system.log.info("offered state = " + s)
       Persist.state = s
-    case msg: Set =>
-      Persist.state = Persist.state.updatedAdd(Set(msg.key, msg.value))
-    case msg: Remove =>
-      Persist.state = Persist.state.updatedRemove(Remove(msg.key))
+
+    case msg: messages.Set => Persist.state = Persist.state.updatedAdd(messages.Set(msg.key, msg.value))
+
+    case msg: Remove => Persist.state = Persist.state.updatedRemove(Remove(msg.key))
   }
 }

@@ -1,7 +1,7 @@
 import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, OneForOneStrategy, Props}
 import akka.event.LoggingAdapter
-import messages.{OperatorMessage, RestartMeException, ResumeMeException, StopMeException}
+import messages._
 
 class Supervisor extends Actor {
 

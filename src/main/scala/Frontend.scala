@@ -1,36 +1,56 @@
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.cluster.sharding.ClusterSharding
+import akka.pattern._
 import akka.util.Timeout
 import messages._
-import scala.concurrent.ExecutionContextExecutor
+
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.util.{Failure, Success}
 
 object Frontend {
   def main(args: Array[String]): Unit = {
     try {
-      val system = ActorSystem("ClusterSystem", Helper.createConfig(2552, "frontend", "frontend"))
+      implicit val system: ActorSystem = ActorSystem("ClusterSystem", Helper.createConfig(2552, "frontend", "frontend"))
       val actor = system.actorOf(Props(classOf[Frontend]), "Client")
+      implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
+      implicit val ec: ExecutionContextExecutor = system.dispatcher
 
       while (true) { // TODO transfer to tailRecursive
         val console = scala.io.StdIn.readLine()
         val operator = console.split(" ")
-        if (operator(0) == "get" && operator.length == 2) {
-          actor ! GetItem(operator(1))
-        } else if (operator(0) == "set" && operator.length == 3) {
-          actor ! Set(operator(1), operator(2))
-        } else if (operator(0) == "remove" && operator.length == 2) {
-          actor ! Remove(operator(1))
-        } else if (operator(0) == "getall" && operator.length == 1) {
-          actor ! GetAll
-        } else {
-          actor ! console
-        }
+
+        if (operator(0) == "get" && operator.length == 2)
+          show(actor ? GetItem(operator(1)))
+
+        else if (operator(0) == "set" && operator.length == 3)
+          show(actor ? Set(operator(1), operator(2)))
+
+        else if (operator(0) == "remove" && operator.length == 2)
+          show(actor ? Remove(operator(1)))
+
+        else if (operator(0) == "getall" && operator.length == 1)
+          show(actor ? GetAll)
       }
-    } catch {
+    }
+    catch {
       case msg: Exception =>
         println(msg)
     }
-
   }
+
+  def show(r: Future[Any])(implicit ex: ExecutionContextExecutor): Unit = {
+    r onComplete {
+      case Success(value)
+      => println(value.toString)
+      case Failure(exception)
+      => println(exception.toString)
+    }
+  }
+
+  //Request timeout
+
 }
 
 class Frontend extends Actor {
@@ -43,24 +63,12 @@ class Frontend extends Actor {
 
   import java.util.concurrent.TimeUnit
 
-  import akka.pattern._
-
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
   implicit val executionContext: ExecutionContextExecutor = context.system.dispatcher
 
   def receive: PartialFunction[Any, Unit] = {
-    case _: OperatorMessage if backendNodes.isEmpty =>
-      sender() ! FailedJob("Service unavailable, try again later")
-      printer(FailedJob("Service unavailable, try again later")) //TODO remove
-
-    case msg: OperatorMessage =>
-      jobCounter += 1
-      val service = backendNodes(jobCounter % backendNodes.size)
-      val result = service.?(msg)(timeout).mapTo[ResultMessage]
-      result onComplete { value => //TODO needs refactor
-        printer(value.toString)
-      }
-
+    case result: ResultMessage =>
+      printer(result)
 
     case BackendRegistration if !backendNodes.contains(sender()) =>
       context watch sender()
@@ -71,7 +79,13 @@ class Frontend extends Actor {
       backendNodes = backendNodes.filterNot(_ == a)
       printer("{} Terminated", sender())
 
-    case msg =>
-      printer(msg.toString)
+    case _: OperatorMessage if backendNodes.isEmpty =>
+      sender() ! FailedJob("Service unavailable, try again later")
+
+    case msg: OperatorMessage =>
+      jobCounter += 1
+      val service = backendNodes(jobCounter % backendNodes.size)
+      val result = (service ? msg).mapTo[ResultMessage]
+      result onComplete (res => printer(res))
   }
 }
