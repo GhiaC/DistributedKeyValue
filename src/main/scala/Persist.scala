@@ -1,5 +1,5 @@
 import Snapshot.States
 
-object Persist {
+class Persist {
   var state = States()
 }

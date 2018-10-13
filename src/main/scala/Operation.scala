@@ -1,5 +1,3 @@
-package messages
-
 sealed trait OperatorMessage
 
 case class Set(key: String, value: String) extends OperatorMessage
