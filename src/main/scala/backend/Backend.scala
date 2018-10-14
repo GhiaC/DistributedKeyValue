@@ -17,7 +17,7 @@ object Backend {
       val migration = EventsByTagMigration(system)
       migration.createTables()
       system.log.info("Started port {}", port)
-      system.actorOf(Props[ClusterMember], "Worker")
+      system.actorOf(Props[Supervisor], "Worker")
     } catch {
       case ex: Exception =>
         println(ex) //????
