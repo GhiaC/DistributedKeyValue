@@ -1,0 +1,13 @@
+[repositories]
+  local
+
+  bale-mvn-proxy: https://artifactory.bale.ai:3443/artifactory/bale-mvn-remote-repo
+  bale-ivy-proxy: https://artifactory.bale.ai:3443/artifactory/bale-ivy-remote-repo, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+
+  bale-ivy: https://artifactory.bale.ai:3443/artifactory/ai.bale/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+  bale-maven: https://artifactory.bale.ai:3443/artifactory/ai.bale/
+
+#  activator-launcher-local: file://${activator.local.repository-${activator.home-${user.home}/.activator}/repository}, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+#  activator-local: file://${activator.local.repository-/home/amir/Applications/activator-dist-1.3.7/repository}, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+
+  bale-gradle: https://artifactory.bale.ai:3443/artifactory/ai.bale.gradle
