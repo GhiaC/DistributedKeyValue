@@ -11,7 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionContext) extends KeyValueGrpc.KeyValue {
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
-
   override def setKey(req: SetRequest): Future[SetReply] = {
     (workerActor ? messages.Set(req.key, req.value)).map {
       case msg: SuccessJob =>
@@ -24,9 +23,9 @@ private class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionCo
   override def getValue(request: GetRequest): Future[GetReply] = {
     (workerActor ? messages.GetItem(request.key)).map {
       case msg: SuccessJob =>
-        GetReply("Success", msg.result)
+        GetReply("Success",msg.result)
       case msg: FailedJob =>
-        GetReply("Failed", msg.reason)
+        GetReply("Failed",msg.reason)
     }
   }
 
@@ -36,15 +35,6 @@ private class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionCo
         RemoveReply(msg.result)
       case msg: FailedJob =>
         RemoveReply(msg.reason)
-    }
-  }
-
-  override def increaseValue(request: IncreaseRequest): Future[IncreaseReply] = {
-    (workerActor ? messages.Increase(request.key)).map {
-      case msg: SuccessJob =>
-        IncreaseReply(msg.result)
-      case msg: FailedJob =>
-        IncreaseReply(msg.reason)
     }
   }
 }
