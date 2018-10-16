@@ -21,7 +21,7 @@ class Supervisor extends Actor {
     case _: StopMeException => Stop
   }
 
-  val SuperWorker: ActorRef = context.actorOf(Props(new ClusterMember), "SuperWorker")
+  val SuperWorker: ActorRef = context.actorOf(Props(new Worker), "SuperWorker")
 
   override def receive: Receive = {
     case msg: OperatorMessage =>
