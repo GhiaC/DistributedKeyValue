@@ -1,7 +1,8 @@
 package ai.bale.inter
 
-import com.typesafe.config.{Config, ConfigFactory}
 import ai.bale.protos.keyValue._
+import com.typesafe.config.{Config, ConfigFactory}
+
 import scala.concurrent.Future
 
 object Helper {
@@ -28,7 +29,7 @@ object Helper {
       None
   }
 
-  def sendRequest(request: Any, stub: KeyValueGrpc.KeyValueStub): Future[Any] = {
+  def sendRequest(request: Any, stub: KeyValueGrpc.KeyValueStub): Future[Any] = { // return Any
     request match {
       case req: GetRequest => stub.getValue(req)
       case req: SetRequest => stub.setKey(req)
