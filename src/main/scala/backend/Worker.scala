@@ -18,15 +18,21 @@ class Worker extends PersistentActor with ActorLogging {
     case SaveSnapshotFailure(metadata, reason) => // ...
     case msg: Set =>
       persist(msg) { m =>
-        states = states.updatedAdd(Set(m.key, m.value))
+        states = states.add(Set(m.key, m.value))
       }
       sender() ! SuccessJob("Added")
 
     case msg: Remove =>
       persist(msg) { m =>
-        states = states.updatedRemove(Remove(m.key))
+        states = states.remove(Remove(m.key))
       }
       sender() ! SuccessJob("Removed")
+
+    case msg: Increase =>
+      persist(msg) { m =>
+        states = states.increase(Increase(m.key))
+      }
+      sender() ! SuccessJob("Success")
 
     case msg: GetItem => sender() ! states.getItem(GetItem(msg.key))
 
@@ -38,8 +44,8 @@ class Worker extends PersistentActor with ActorLogging {
       context.system.log.info("offered state = " + s)
       states = s
 
-    case msg: Set => states = states.updatedAdd(Set(msg.key, msg.value))
+    case msg: Set => states = states.add(Set(msg.key, msg.value))
 
-    case msg: Remove => states = states.updatedRemove(Remove(msg.key))
+    case msg: Remove => states = states.remove(Remove(msg.key))
   }
 }

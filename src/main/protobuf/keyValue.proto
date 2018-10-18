@@ -9,6 +9,8 @@ service KeyValue {
     }
     rpc removeKey (RemoveRequest) returns (RemoveReply) {
     }
+    rpc increaseValue (IncreaseRequest) returns (IncreaseReply) {
+    }
 }
 
 message SetRequest {
@@ -34,5 +36,13 @@ message RemoveRequest {
 }
 
 message RemoveReply {
+    string result = 1;
+}
+
+message IncreaseRequest {
+    string key = 1;
+}
+
+message IncreaseReply {
     string result = 1;
 }
