@@ -3,12 +3,48 @@ import frontend.Frontend
 import org.scalatest.{Assertion, AsyncFlatSpec}
 
 import scala.concurrent.Future
+import scala.util.Random
 
 class GRPCSpec extends AsyncFlatSpec {
 
-  behavior of "frontend"
+  behavior of "Frontend of Distributed key value"
 
-  scenario2()
+  scenario4()
+
+  def scenario4(): Unit = {
+    val key = new Random().nextString(3)
+    val value = new Random().nextInt(100)
+    s"Result of `set $key $value` command" should "SetReply(\"Added\")" in {
+      commandTest(s"set $key $value", SetReply("Added"))
+    }
+    "Result of get after send increase message" should "GetReply(\"Success\", " + (value + 100) + "))" in {
+      val myFutures: IndexedSeq[Future[Any]] = (1 to 20) flatMap { x =>
+        (1 to 5) map { _ =>
+          Frontend.doCommand(s"increase $key")
+        }
+      }
+      Future.sequence(myFutures) flatMap { _ =>
+        commandTest(s"get $key", GetReply("Success", (value + 100).toString))
+      }
+    }
+  }
+
+  def scenario3(): Unit = {
+    val key = new Random().nextString(3)
+    val value = new Random().nextInt(100)
+    s"Result of `set $key $value` command" should "SetReply(\"Added\")" in {
+      commandTest(s"set $key $value", SetReply("Added"))
+    }
+
+    "Result of get after send increase message" should "GetReply(\"Success\", " + (value + 100) + "))" in {
+      val myFutures: IndexedSeq[Future[Any]] = (1 to 100) map { _ =>
+        Frontend.doCommand(s"increase $key")
+      }
+      Future.sequence(myFutures) flatMap { _ =>
+        commandTest(s"get $key", GetReply("Success", (value + 100).toString))
+      }
+    }
+  }
 
   def scenario1() {
     "Result of `set a TestValueTestValueTestValueTestValueTestValue` command" should "SetReply(\"Added\")" in {
