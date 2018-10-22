@@ -34,9 +34,7 @@ object Snapshot {
       SuccessJob(received.toString())
     }
 
-    override def toString: String
-
-    = received.toString
+    override def toString: String = received.toString
   }
 
 }

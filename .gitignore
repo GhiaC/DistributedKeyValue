@@ -4,3 +4,4 @@
 target
 ./target
 src/main/scala/testGPRC
+hs_err*

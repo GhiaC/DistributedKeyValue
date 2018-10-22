@@ -47,7 +47,5 @@ class ClusterMember extends Actor with ActorLogging {
   def receive: PartialFunction[Any, Unit] = {
     case msg: OperatorMessage =>
       (shardRegion ? msg) pipeTo sender()
-    case t =>
-      println(t)
   }
 }
