@@ -19,11 +19,10 @@ object Main {
 
   def setupNode(actorName: String, port: Int): Unit = {
     val system = ActorSystem(actorName, Helper.createConfig(port, "backend","application"))
-//    val migration = EventsByTagMigration(system)
-//    migration.createTables()
+
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    val worker: actor.ActorRef = system.actorOf(Props[ClusterMember], "ClusterMember")
+    val worker: actor.ActorRef = ClusterMemberExtension(system).shardRegion
     ServerBuilder.forPort(port + 100).
       addService(KeyValueGrpc.bindService(new KeyValueImpl(worker), ec)).build.start
     system.log.info("Started port {}", port)

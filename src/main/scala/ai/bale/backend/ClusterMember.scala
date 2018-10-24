@@ -10,12 +10,18 @@ import akka.pattern._
 import scala.concurrent.ExecutionContext
 import ai.bale.protos.keyValue._
 
-class ClusterMember extends Actor with ActorLogging {
+object ClusterMemberExtension
+  extends ExtensionId[ClusterMemberExtension]
+    with ExtensionIdProvider {
 
-  override def preStart(): Unit = {
-    log.info("Starting ShardRegion {}", context.system.name)
-  }
+  override def lookup: ClusterMemberExtension.type = ClusterMemberExtension
 
+  override def createExtension(system: ExtendedActorSystem) = new ClusterMemberExtension(system)
+
+  override def get(system: ActorSystem): ClusterMemberExtension = super.get(system)
+}
+
+class ClusterMemberExtension(system: ExtendedActorSystem) extends Extension  {
   val conf: Config = ConfigFactory.load()
   private val numberOfKeyPerActor = conf.getInt("myconf.number-of-key-per-actor")
 
@@ -36,18 +42,11 @@ class ClusterMember extends Actor with ActorLogging {
     case ShardRegion.StartEntity(id) => (id.toLong % numberOfShards).toString
   }
 
-  val shardRegion: ActorRef = ClusterSharding(context.system).start(
+  val shardRegion: ActorRef = ClusterSharding(system).start(
     typeName = "Worker",
     entityProps = Props[Worker],
-    settings = ClusterShardingSettings(context.system),
+    settings = ClusterShardingSettings(system),
     extractEntityId = extractEntityId,
     extractShardId = extractShardId)
 
-  implicit val ec: ExecutionContext = context.dispatcher
-
-  implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
-
-  def receive: PartialFunction[Any, Unit] = {
-    case msg => (shardRegion ? msg) pipeTo sender()
-  }
 }

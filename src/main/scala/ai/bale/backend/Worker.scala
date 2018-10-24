@@ -9,7 +9,7 @@ class Worker extends PersistentActor with ActorLogging {
 
   def persistenceId: String = context.self.path.toString
 
-  var states = new States()
+  private var states = new States()
 
   def receiveCommand: Receive = {
     case "print" => context.system.log.info("current state = " + states)
@@ -44,5 +44,7 @@ class Worker extends PersistentActor with ActorLogging {
     case msg: SetRequest => states = states.add(msg)
 
     case msg: RemoveRequest => states = states.remove(msg)
+
+    case msg: IncreaseRequest => states = states.increase(msg)
   }
 }
