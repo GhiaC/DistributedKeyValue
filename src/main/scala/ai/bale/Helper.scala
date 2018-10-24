@@ -1,4 +1,4 @@
-package backend
+package ai.bale.inter
 
 import ai.bale.protos.keyValue._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -6,12 +6,11 @@ import com.typesafe.config.{Config, ConfigFactory}
 import scala.concurrent.Future
 
 object Helper {
-
   class ExtendedString(s: String) {
     def isNumber: Boolean = s forall Character.isDigit
   }
 
-  def createConfig(port: Int, role: String, resources: String = "application"): Config = {
+  def createConfig(port: Int, role: String ,resources :String): Config = {
     ConfigFactory.parseString(
       s"""
         akka.remote.netty.tcp.port=$port

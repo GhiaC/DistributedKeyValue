@@ -2,7 +2,7 @@ package backend
 
 import akka.actor._
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
-import ai.bale.protos.keyValue._
+import backend.Snapshot.States
 import messages._
 
 class Worker extends PersistentActor with ActorLogging {
@@ -14,25 +14,29 @@ class Worker extends PersistentActor with ActorLogging {
   def receiveCommand: Receive = {
     case "print" => context.system.log.info("current state = " + states)
     case "snap" => saveSnapshot(states)
-    case msg: SetRequest =>
+    case SaveSnapshotSuccess(metadata) => // ...
+    case SaveSnapshotFailure(metadata, reason) => // ...
+    case msg: Set =>
       persist(msg) { m =>
-        states = states.add(msg)
-        sender() ! SuccessJob("Added")
+        states = states.add(Set(m.key, m.value))
       }
+      sender() ! SuccessJob("Added")
 
-    case msg: RemoveRequest =>
+    case msg: Remove =>
       persist(msg) { m =>
-        states = states.remove(msg)
-        sender() ! SuccessJob("Removed")
+        states = states.remove(Remove(m.key))
       }
+      sender() ! SuccessJob("Removed")
 
-    case msg: IncreaseRequest =>
+    case msg: Increase =>
       persist(msg) { m =>
-        states = states.increase(msg)
-        sender() ! SuccessJob("Success")
+        states = states.increase(Increase(m.key))
       }
+      sender() ! SuccessJob("Success")
 
-    case msg: GetRequest => sender() ! states.getItem(msg)
+    case msg: GetItem => sender() ! states.getItem(GetItem(msg.key))
+
+    case GetAll => sender() ! states.getAll
   }
 
   def receiveRecover: Receive = {
@@ -40,8 +44,8 @@ class Worker extends PersistentActor with ActorLogging {
       context.system.log.info("offered state = " + s)
       states = s
 
-    case msg: SetRequest => states = states.add(msg)
+    case msg: Set => states = states.add(Set(msg.key, msg.value))
 
-    case msg: RemoveRequest => states = states.remove(msg)
+    case msg: Remove => states = states.remove(Remove(msg.key))
   }
 }

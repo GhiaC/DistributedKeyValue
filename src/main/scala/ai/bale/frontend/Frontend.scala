@@ -2,7 +2,7 @@ package frontend
 
 import java.util.concurrent.TimeUnit
 
-import backend.Helper
+import ai.bale.inter.Helper
 import ai.bale.protos.keyValue.KeyValueGrpc
 import akka.actor.ActorSystem
 import akka.util.Timeout
@@ -12,7 +12,8 @@ import scala.util.Success
 
 object Frontend {
 
-  implicit val system: ActorSystem = ActorSystem("ClusterSystem", Helper.createConfig(2555, "frontend"))
+  implicit val system: ActorSystem = ActorSystem("ClusterSystem",
+    Helper.createConfig(2555, "frontend", "frontend"))
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val timeout: Timeout = Timeout(10, TimeUnit.SECONDS)
 
