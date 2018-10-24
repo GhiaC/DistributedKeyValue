@@ -12,17 +12,17 @@ import scala.concurrent.{ExecutionContext, Future}
 private class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionContext) extends KeyValueGrpc.KeyValue {
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
 
-  override def setKey(req: SetRequest): Future[SetReply] = {
-    (workerActor ? messages.Set(req.key, req.value)).map {
+  override def setKey(request: SetRequest): Future[SetReply] = {
+    (workerActor ? request).map {
       case msg: SuccessJob =>
         SetReply(msg.result)
-      case msg: FailedJob =>
-        SetReply(msg.reason)
+    } recoverWith {
+      case throwable: Throwable => Future.failed(throwable)
     }
   }
 
   override def getValue(request: GetRequest): Future[GetReply] = {
-    (workerActor ? messages.GetItem(request.key)).map {
+    (workerActor ? request).map {
       case msg: SuccessJob =>
         GetReply(msg.result)
     } recoverWith {
@@ -31,20 +31,20 @@ private class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionCo
   }
 
   override def removeKey(request: RemoveRequest): Future[RemoveReply] = {
-    (workerActor ? messages.Remove(request.key)).map {
+    (workerActor ? request).map {
       case msg: SuccessJob =>
         RemoveReply(msg.result)
-      case msg: FailedJob =>
-        RemoveReply(msg.reason)
+    } recoverWith {
+      case throwable: Throwable => Future.failed(throwable)
     }
   }
 
   override def increaseValue(request: IncreaseRequest): Future[IncreaseReply] = {
-    (workerActor ? messages.Increase(request.key)).map {
+    (workerActor ? request).map {
       case msg: SuccessJob =>
         IncreaseReply(msg.result)
-      case msg: FailedJob =>
-        IncreaseReply(msg.reason)
+    } recoverWith {
+      case throwable: Throwable => Future.failed(throwable)
     }
   }
 }

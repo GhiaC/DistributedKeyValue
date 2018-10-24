@@ -8,6 +8,7 @@ import messages._
 import java.util.concurrent.TimeUnit
 import akka.pattern._
 import scala.concurrent.ExecutionContext
+import ai.bale.protos.keyValue._
 
 class ClusterMember extends Actor with ActorLogging {
 
@@ -21,15 +22,17 @@ class ClusterMember extends Actor with ActorLogging {
   private val numberOfShards = conf.getInt("myconf.number-of-shards")
 
   private val extractEntityId: ShardRegion.ExtractEntityId = {
-    case msg@Set(key, _) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
-    case msg@Remove(key) => (key.hashCode() % numberOfKeyPerActor toString, msg)
-    case msg@GetItem(key) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
+    case msg@SetRequest(key, _) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
+    case msg@RemoveRequest(key) => (key.hashCode() % numberOfKeyPerActor toString, msg)
+    case msg@GetRequest(key) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
+    case msg@IncreaseRequest(key) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
   }
 
   private val extractShardId: ShardRegion.ExtractShardId = {
-    case Set(key, _) => (key.hashCode() % numberOfShards).toString
-    case Remove(key) => (key.hashCode % numberOfShards).toString
-    case GetItem(key) => (key.hashCode() % numberOfShards).toString
+    case SetRequest(key, _) => (key.hashCode() % numberOfShards).toString
+    case RemoveRequest(key) => (key.hashCode % numberOfShards).toString
+    case GetRequest(key) => (key.hashCode() % numberOfShards).toString
+    case IncreaseRequest(key) => (key.hashCode() % numberOfShards).toString
     case ShardRegion.StartEntity(id) => (id.toLong % numberOfShards).toString
   }
 
@@ -45,9 +48,6 @@ class ClusterMember extends Actor with ActorLogging {
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
 
   def receive: PartialFunction[Any, Unit] = {
-    case msg: OperatorMessage =>
-      (shardRegion ? msg) pipeTo sender()
-    case t =>
-      println(t)
+    case msg => (shardRegion ? msg) pipeTo sender()
   }
 }

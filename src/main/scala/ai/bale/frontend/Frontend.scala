@@ -2,7 +2,7 @@ package frontend
 
 import java.util.concurrent.TimeUnit
 
-import ai.bale.inter.Helper
+import ai.bale.Helper
 import ai.bale.protos.keyValue.KeyValueGrpc
 import akka.actor.ActorSystem
 import akka.util.Timeout

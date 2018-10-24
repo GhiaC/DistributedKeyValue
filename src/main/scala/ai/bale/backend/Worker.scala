@@ -2,41 +2,38 @@ package backend
 
 import akka.actor._
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
-import backend.Snapshot.States
 import messages._
+import ai.bale.protos.keyValue._
 
 class Worker extends PersistentActor with ActorLogging {
 
   def persistenceId: String = context.self.path.toString
 
-  var states = States()
+  var states = new States()
 
   def receiveCommand: Receive = {
     case "print" => context.system.log.info("current state = " + states)
     case "snap" => saveSnapshot(states)
-    case SaveSnapshotSuccess(metadata) => // ...
-    case SaveSnapshotFailure(metadata, reason) => // ...
-    case msg: Set =>
+    case msg: SetRequest =>
       persist(msg) { m =>
-        states = states.add(Set(m.key, m.value))
+        states = states.add(msg)
+        sender() ! SuccessJob("Added")
       }
-      sender() ! SuccessJob("Added")
 
-    case msg: Remove =>
+    case msg: RemoveRequest =>
       persist(msg) { m =>
-        states = states.remove(Remove(m.key))
+        states = states.remove(msg)
+        sender() ! SuccessJob("Removed")
       }
-      sender() ! SuccessJob("Removed")
 
-    case msg: Increase =>
+    case msg: IncreaseRequest =>
       persist(msg) { m =>
-        states = states.increase(Increase(m.key))
+        states = states.increase(msg)
+        sender() ! SuccessJob("Success")
       }
-      sender() ! SuccessJob("Success")
 
-    case msg: GetItem => sender() ! states.getItem(GetItem(msg.key))
+    case msg: GetRequest => sender() ! states.getItem(msg)
 
-    case GetAll => sender() ! states.getAll
   }
 
   def receiveRecover: Receive = {
@@ -44,8 +41,8 @@ class Worker extends PersistentActor with ActorLogging {
       context.system.log.info("offered state = " + s)
       states = s
 
-    case msg: Set => states = states.add(Set(msg.key, msg.value))
+    case msg: SetRequest => states = states.add(msg)
 
-    case msg: Remove => states = states.remove(Remove(msg.key))
+    case msg: RemoveRequest => states = states.remove(msg)
   }
 }

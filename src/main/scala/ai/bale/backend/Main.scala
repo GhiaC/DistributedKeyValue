@@ -1,6 +1,6 @@
 package backend
 
-import ai.bale.inter.Helper
+import ai.bale.Helper
 import ai.bale.protos.keyValue._
 import akka.actor
 import akka.actor.{ActorSystem, Props}

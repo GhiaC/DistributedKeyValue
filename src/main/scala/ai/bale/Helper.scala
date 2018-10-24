@@ -1,4 +1,4 @@
-package ai.bale.inter
+package ai.bale
 
 import ai.bale.protos.keyValue._
 import com.typesafe.config.{Config, ConfigFactory}
