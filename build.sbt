@@ -1,7 +1,7 @@
 scalaVersion := "2.12.6"
 
 name := "Memcache"
-organization := "me.ghiasi"
+organization := "ai.bale"
 version := "1.0"
 
 credentials += Credentials(Path.userHome / ".credentials")

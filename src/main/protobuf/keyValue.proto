@@ -25,8 +25,7 @@ message GetRequest {
 }
 
 message GetReply {
-    string value = 1;
-    string result = 2;
+    string result = 1;
 }
 
 message RemoveRequest {
