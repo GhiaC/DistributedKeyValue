@@ -9,18 +9,18 @@ import akka.pattern._
 import scala.concurrent.ExecutionContext
 import ai.bale.protos.keyValue._
 
-object ClusterMemberExtension
-  extends ExtensionId[ClusterMemberExtension]
+object ClusterExtension
+  extends ExtensionId[ClusterExtension]
     with ExtensionIdProvider {
 
-  override def lookup: ClusterMemberExtension.type = ClusterMemberExtension
+  override def lookup: ClusterExtension.type = ClusterExtension
 
-  override def createExtension(system: ExtendedActorSystem) = new ClusterMemberExtension(system)
+  override def createExtension(system: ExtendedActorSystem) = new ClusterExtension(system)
 
-  override def get(system: ActorSystem): ClusterMemberExtension = super.get(system)
+  override def get(system: ActorSystem): ClusterExtension = super.get(system)
 }
 
-class ClusterMemberExtension(system: ExtendedActorSystem) extends Extension {
+class ClusterExtension(system: ExtendedActorSystem) extends Extension {
   val conf: Config = ConfigFactory.load()
   private val numberOfEntity = conf.getInt("myconf.number-of-entity")
 
@@ -57,6 +57,9 @@ class ClusterMemberExtension(system: ExtendedActorSystem) extends Extension {
     entityProps = Props[Worker],
     settings = ClusterShardingSettings(system),
     extractEntityId = extractEntityId,
-    extractShardId = extractShardId)
-
+    extractShardId = extractShardId).
+    withAutoReset(10.seconds) // reset if the child does not throw any errors within 10 seconds
+    .withSupervisorStrategy(OneForOneStrategy() {
+      case _ => SupervisorStrategy.Escalate
+    })
 }
