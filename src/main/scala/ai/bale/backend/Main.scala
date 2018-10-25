@@ -22,7 +22,7 @@ object Main {
     system.eventStream.subscribe(listener, classOf[UnhandledMessage])
     system.eventStream.subscribe(listener, classOf[DeadLetter])
     Future {
-      val worker: ActorRef = ClusterMemberExtension(system).shardRegion
+      val worker: ActorRef = ClusterExtension(system).shardRegion
       ServerBuilder.forPort(port + 100).
         addService(KeyValueGrpc.bindService(new KeyValueImpl(worker), ec)).build.start
       system.log.info("Started port {}", port)

@@ -57,9 +57,5 @@ class ClusterExtension(system: ExtendedActorSystem) extends Extension {
     entityProps = Props[Worker],
     settings = ClusterShardingSettings(system),
     extractEntityId = extractEntityId,
-    extractShardId = extractShardId).
-    withAutoReset(10.seconds) // reset if the child does not throw any errors within 10 seconds
-    .withSupervisorStrategy(OneForOneStrategy() {
-      case _ => SupervisorStrategy.Escalate
-    })
+    extractShardId = extractShardId)
 }
