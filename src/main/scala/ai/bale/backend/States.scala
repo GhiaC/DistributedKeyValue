@@ -1,7 +1,6 @@
 package backend
 
 import ai.bale.Helper.ExtendedString
-import messages.{FailedJob, _}
 import ai.bale.protos.keyValue._
 
 final case class States(received: Map[String, Any] = Map()) {
@@ -14,9 +13,9 @@ final case class States(received: Map[String, Any] = Map()) {
     else copy(received)
   }
 
-  def getItem(msg: GetRequest): ResultMessage = {
-    if (received.contains(msg.key)) SuccessJob(received(msg.key).toString)
-    else FailedJob("invalid key")
+  def getItem(msg: GetRequest): Option[GetReply] = {
+    if (received.contains(msg.key)) Some(GetReply(received(msg.key).toString))
+    else None
   }
 
   def increase(msg: IncreaseRequest): States = {

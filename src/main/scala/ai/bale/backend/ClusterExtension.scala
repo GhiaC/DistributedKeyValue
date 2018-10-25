@@ -4,7 +4,6 @@ import akka.actor._
 import akka.cluster.sharding._
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
-import messages._
 import java.util.concurrent.TimeUnit
 import akka.pattern._
 import scala.concurrent.ExecutionContext
@@ -21,17 +20,28 @@ object ClusterMemberExtension
   override def get(system: ActorSystem): ClusterMemberExtension = super.get(system)
 }
 
-class ClusterMemberExtension(system: ExtendedActorSystem) extends Extension  {
+class ClusterMemberExtension(system: ExtendedActorSystem) extends Extension {
   val conf: Config = ConfigFactory.load()
-  private val numberOfKeyPerActor = conf.getInt("myconf.number-of-key-per-actor")
+  private val numberOfEntity = conf.getInt("myconf.number-of-entity")
+
+  private val oneKeyPerActor = conf.getString("myconf.one-key-per-actor")
 
   private val numberOfShards = conf.getInt("myconf.number-of-shards")
 
+  private def getNumberOfEntity(key: String): String = {
+    oneKeyPerActor match {
+      case "on" =>
+        key.hashCode() toString
+      case _ =>
+        (key.hashCode() % numberOfEntity) toString
+    }
+  }
+
   private val extractEntityId: ShardRegion.ExtractEntityId = {
-    case msg@SetRequest(key, _) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
-    case msg@RemoveRequest(key) => (key.hashCode() % numberOfKeyPerActor toString, msg)
-    case msg@GetRequest(key) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
-    case msg@IncreaseRequest(key) => ((key.hashCode() % numberOfKeyPerActor) toString, msg)
+    case msg@SetRequest(key, _) => (getNumberOfEntity(key), msg)
+    case msg@RemoveRequest(key) => (getNumberOfEntity(key), msg)
+    case msg@GetRequest(key) => (getNumberOfEntity(key), msg)
+    case msg@IncreaseRequest(key) => (getNumberOfEntity(key), msg)
   }
 
   private val extractShardId: ShardRegion.ExtractShardId = {

@@ -2,7 +2,6 @@ package backend
 
 import akka.actor._
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
-import messages._
 import ai.bale.protos.keyValue._
 
 class Worker extends PersistentActor with ActorLogging {
@@ -15,24 +14,32 @@ class Worker extends PersistentActor with ActorLogging {
     case "print" => context.system.log.info("current state = " + states)
     case "snap" => saveSnapshot(states)
     case msg: SetRequest =>
+      val replyTo = sender()
       persist(msg) { m =>
         states = states.add(msg)
-        sender() ! SuccessJob("Added")
+        replyTo ! Ack("Added")
       }
 
     case msg: RemoveRequest =>
+      val replyTo = sender()
       persist(msg) { m =>
         states = states.remove(msg)
-        sender() ! SuccessJob("Removed")
+        replyTo ! Ack("Removed")
       }
 
     case msg: IncreaseRequest =>
+      val replyTo = sender()
       persist(msg) { m =>
         states = states.increase(msg)
-        sender() ! SuccessJob("Success")
+        replyTo ! Ack("Success")
       }
 
-    case msg: GetRequest => sender() ! states.getItem(msg)
+    case msg: GetRequest =>
+      val replyTo = sender()
+      states.getItem(msg) match {
+        case Some(msg) => replyTo ! msg
+        case _ => replyTo ! new Exception("invalid key!")
+      }
 
   }
 
