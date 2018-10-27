@@ -1,44 +1,53 @@
-package ai.bale.backend
+package ai.bale.distributedKeyValue
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor
-import akka.pattern._
-import akka.util.Timeout
 import ai.bale.protos.keyValue._
+import akka.actor.ActorSystem
+import akka.util.Timeout
 
 import scala.concurrent.{ExecutionContext, Future}
 
- class KeyValueImpl(workerActor: actor.ActorRef)(implicit ec: ExecutionContext) extends KeyValueGrpc.KeyValue {
+class KeyValueImpl(actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends KeyValueGrpc.KeyValue {
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
 
+  val workerExtension = WorkerExtension(actorSystem)
+
   override def set(request: SetRequest): Future[Ack] = {
-    (workerActor ? request).map {
-      case msg: Ack => msg
+    workerExtension.set(request).map {
+      msg: Ack => msg
     } recoverWith {
       case throwable: Throwable => Future.failed(throwable)
     }
   }
 
   override def get(request: GetRequest): Future[GetReply] = {
-    (workerActor ? request).map {
-      case msg: GetReply => msg
+    workerExtension.get(request).map {
+      msg: GetReply => msg
     } recoverWith {
       case throwable: Throwable => Future.failed(throwable)
     }
   }
 
   override def remove(request: RemoveRequest): Future[Ack] = {
-    (workerActor ? request).map {
-      case msg: Ack => msg
+    workerExtension.remove(request).map {
+      msg: Ack => msg
     } recoverWith {
       case throwable: Throwable => Future.failed(throwable)
     }
   }
 
   override def increase(request: IncreaseRequest): Future[IncreaseReply] = {
-    (workerActor ? request).map {
-      case msg: IncreaseReply => msg
+    workerExtension.increase(request).map {
+      msg: IncreaseReply => msg
+    } recoverWith {
+      case throwable: Throwable => Future.failed(throwable)
+    }
+  }
+
+  override def snapshot(request: SnapshotRequest): Future[Ack] = {
+    workerExtension.snapshot(request).map {
+      msg: Ack => msg
     } recoverWith {
       case throwable: Throwable => Future.failed(throwable)
     }

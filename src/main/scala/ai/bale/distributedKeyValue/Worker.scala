@@ -1,4 +1,4 @@
-package ai.bale.backend
+package ai.bale.distributedKeyValue
 
 import akka.actor._
 import akka.persistence.{PersistentActor, SnapshotOffer}
@@ -11,8 +11,8 @@ class Worker extends PersistentActor with ActorLogging {
   private var states = States()
 
   def receiveCommand: Receive = {
-    case "print" => context.system.log.info("current state = " + states)
-    case "snap" => saveSnapshot(states)
+    case SnapshotRequest => saveSnapshot(states)
+
     case msg: SetRequest =>
       val replyTo = sender()
       persist(msg) { msg =>
@@ -31,29 +31,18 @@ class Worker extends PersistentActor with ActorLogging {
       val replyTo = sender()
       persist(msg) { m =>
         states = states.increase(msg)
-        states.get(GetRequest(msg.key)) match {
-          case Some(replyMessage) => replyTo ! IncreaseReply(replyMessage.result)
-          case _ => replyTo ! new Exception("invalid key!")
-        }
+        replyTo ! IncreaseReply(states.get(GetRequest(msg.key)).result)
       }
 
     case msg: GetRequest =>
       val replyTo = sender()
-      states.get(msg) match {
-        case Some(replyMessage) => replyTo ! replyMessage
-        case _ => replyTo ! new Exception("invalid key!")
-      }
-  }
-
-  override val supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
-    case _: IllegalArgumentException ⇒ SupervisorStrategy.Resume
-    case _: ActorInitializationException ⇒ SupervisorStrategy.Stop
-    case _: DeathPactException ⇒ SupervisorStrategy.Stop
-    case _: Exception ⇒ SupervisorStrategy.Restart
+      replyTo ! states.get(GetRequest(msg.key))
   }
 
   def receiveRecover: Receive = {
-    case SnapshotOffer(_, s: States) => context.system.log.info("offered state = " + s)
+    case SnapshotOffer(_, s: States) =>
+      context.system.log.info("offered state = " + s)
+      states = s
     case msg: SetRequest => states = states.add(msg)
     case msg: RemoveRequest => states = states.remove(msg)
     case msg: IncreaseRequest => states = states.increase(msg)

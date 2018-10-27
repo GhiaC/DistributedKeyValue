@@ -1,4 +1,4 @@
-package ai.bale.backend
+package ai.bale.distributedKeyValue
 
 import ai.bale.Helper.ExtendedString
 import ai.bale.protos.keyValue._
@@ -13,16 +13,16 @@ final case class States(received: Map[String, Any] = Map()) {
     else copy(received)
   }
 
-  def get(msg: GetRequest): Option[GetReply] = {
-    if (received.contains(msg.key)) Some(GetReply(received(msg.key).toString))
-    else None
+  def get(msg: GetRequest): GetReply = {
+    if (received.contains(msg.key)) GetReply(Some(received(msg.key).toString))
+    else GetReply(None)
   }
 
   def increase(msg: IncreaseRequest): States = {
     if (received.contains(msg.key)) {
       if (received(msg.key).toString.isNumber) {
         val newValue = received(msg.key).toString.toInt + 1
-        remove(RemoveRequest(msg.key)).add(SetRequest(msg.key, newValue toString))
+        remove(RemoveRequest(msg.key)).add(SetRequest(msg.key, newValue.toString))
       }
       else copy(received)
     }

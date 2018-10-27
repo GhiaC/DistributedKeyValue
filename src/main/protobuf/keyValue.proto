@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package ai.bale.protos;
+import "google/protobuf/wrappers.proto";
 
 service KeyValue {
     rpc Set (SetRequest) returns (Ack) {
@@ -10,6 +11,8 @@ service KeyValue {
     rpc Remove (RemoveRequest) returns (Ack) {
     }
     rpc Increase (IncreaseRequest) returns (IncreaseReply) {
+    }
+    rpc Snapshot (SnapshotRequest) returns (Ack) {
     }
 }
 
@@ -23,11 +26,11 @@ message GetRequest {
 }
 
 message GetReply {
-    string result = 1;
+    google.protobuf.StringValue result = 1;
 }
 
 message IncreaseReply {
-    string result = 1;
+    google.protobuf.StringValue result = 1;
 }
 
 message RemoveRequest {
@@ -39,5 +42,9 @@ message IncreaseRequest {
 }
 
 message Ack {
+    string result = 1;
+}
+
+message SnapshotRequest {
     string result = 1;
 }

@@ -27,12 +27,12 @@ class GRPCSpec extends AsyncFlatSpec {
         stub.increase(IncreaseRequest(key))
       }
     }
-    Future.sequence(myFutures) flatMap { _ => sendGetRequestAndCompareReply(GetRequest(key), (value + 100) toString) }
+    Future.sequence(myFutures) flatMap { _ => sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some((value + 100) toString))) }
   }
 
   def sendGetRequestAndCompareReply(msg: GetRequest, value: Any): Future[scalatest.Assertion] = {
     stub.get(msg) map {
-      getReply => assert(getReply == GetReply(value toString))
+      getReply => assert(getReply == value)
     }
   }
 
@@ -44,7 +44,7 @@ class GRPCSpec extends AsyncFlatSpec {
       stub.increase(IncreaseRequest(key))
     }
     Future.sequence(myFutures) flatMap { _ =>
-      sendGetRequestAndCompareReply(GetRequest(key), value + increase toString)
+      sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some(value + increase toString)))
     }
   }
 
@@ -53,19 +53,14 @@ class GRPCSpec extends AsyncFlatSpec {
     val (key, value) = (random.nextString(3), random.nextString(100))
     stub.set(SetRequest(key, value.toString))
     stub.remove(RemoveRequest(key))
-    stub.get(GetRequest(key)) map { _ =>
-      fail
-    } recoverWith {
-      case e: Exception =>
-        assert(e.getMessage == "INTERNAL: java.lang.Exception: invalid key! (of class java.lang.Exception)")
-    }
+    sendGetRequestAndCompareReply(GetRequest(key), GetReply(None))
   }
 
   def simpleSetAndGet(): Future[Assertion] = {
     val random = new Random()
     val (key, value) = (random.nextString(3), random.nextString(100))
     stub.set(SetRequest(key, value.toString)) flatMap { _ =>
-      sendGetRequestAndCompareReply(GetRequest(key), value toString)
+      sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some(value toString)))
     }
   }
 }
