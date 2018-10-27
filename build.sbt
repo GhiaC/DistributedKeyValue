@@ -1,14 +1,14 @@
 scalaVersion := "2.12.6"
 
 name := "Memcache"
-organization := "ai.bale"
+organization := "me.ghiasi"
 version := "1.0"
 
-credentials += Credentials(Path.userHome / ".credentials")
-
-libraryDependencies ++= Seq(
-  "ai.bale" %% "lati-core" % "0.1.3"
-)
+//credentials += Credentials(Path.userHome / ".credentials")
+//
+//libraryDependencies ++= Seq(
+//  "ai.bale" %% "lati-core" % "0.1.3"
+//)
 
 
 import sbt.Keys.libraryDependencies
@@ -45,8 +45,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster-tools" % "2.5.17",
   "com.typesafe.akka" %% "akka-distributed-data" % "2.5.14",
   "com.typesafe.akka" %% "akka-persistence" % "2.5.14",
-  "com.typesafe.akka" %% "akka-persistence-cassandra" % "0.87",
-  "com.typesafe.akka" %% "akka-persistence-cassandra-launcher" % "0.87",
+//  "com.typesafe.akka" %% "akka-persistence-cassandra" % "0.87",
+//  "com.typesafe.akka" %% "akka-persistence-cassandra-launcher" % "0.87",
   "com.typesafe.akka" %% "akka-remote" % "2.5.14",
 
   "org.json4s" %% "json4s-native" % "3.6.0",
@@ -57,4 +57,3 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "be.wegenenverkeer" %% "akka-persistence-pg" % "0.10.0"
-
