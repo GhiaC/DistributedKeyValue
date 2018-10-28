@@ -10,6 +10,7 @@ class Client {
   private val getHost = conf.getString("tester.GRPCSpec.host")
   val channel: ManagedChannel = ManagedChannelBuilder.forAddress(getHost, getPort).usePlaintext(true).build
   val stub: KeyValueGrpc.KeyValueStub = KeyValueGrpc.stub(channel)
+  val blockingStub: KeyValueGrpc.KeyValueBlockingStub = KeyValueGrpc.blockingStub(channel)
   Thread.sleep(100)
 }
 

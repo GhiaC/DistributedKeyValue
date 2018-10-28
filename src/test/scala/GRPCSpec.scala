@@ -9,7 +9,9 @@ import scala.util.Random
 
 class GRPCSpec extends AsyncFlatSpec {
 
-  val stub: KeyValueGrpc.KeyValueStub = new Client().stub
+  private val client = new Client
+  private val stub: KeyValueGrpc.KeyValueStub = client.stub
+  private val blockingStub: KeyValueGrpc.KeyValueBlockingStub = client.blockingStub
 
   behavior of "Frontend of Distributed key value"
   it should "return exception when get removed key" in GetRemovedKey
@@ -32,9 +34,8 @@ class GRPCSpec extends AsyncFlatSpec {
   }
 
   def sendGetRequestAndCompareReply(msg: GetRequest, value: Any): Future[scalatest.Assertion] = {
-    stub.get(msg) map {
-      getReply => assert(getReply == value)
-    }
+    val getResponse = blockingStub.get(msg)
+    assert(getResponse == value)
   }
 
   def sendRandomIncrease(): Future[Assertion] = {
@@ -52,27 +53,24 @@ class GRPCSpec extends AsyncFlatSpec {
   def GetRemovedKey(): Future[Assertion] = {
     val random = new Random()
     val (key, value) = (random.nextString(3), random.nextString(100))
-    stub.set(SetRequest(key, value.toString))
-    stub.remove(RemoveRequest(key))
+    blockingStub.set(SetRequest(key, value.toString))
+    blockingStub.remove(RemoveRequest(key))
     sendGetRequestAndCompareReply(GetRequest(key), GetReply(None))
   }
 
   def simpleSetAndGet(): Future[Assertion] = {
     val random = new Random()
     val (key, value) = (random.nextString(3), random.nextString(100))
-    stub.set(SetRequest(key, value.toString)) flatMap { _ =>
-      sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some(value toString)))
-    }
+    blockingStub.set(SetRequest(key, value.toString))
+    sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some(value toString)))
   }
 
   def sendSnapshotRequest(): Future[Assertion] = {
     val random = new Random()
     val (key, value) = (random.nextString(3), random.nextString(100))
-    stub.set(SetRequest(key, value.toString)) flatMap { _ =>
-      stub.snapshot(SnapshotRequest(key)) map { response =>
-        assert(response == Ack("Success"))
-      }
-    }
+    blockingStub.set(SetRequest(key, value.toString))
+    val snapshotResponse = blockingStub.snapshot(SnapshotRequest(key))
+    assert(snapshotResponse == Ack("Success"))
   }
 
 }

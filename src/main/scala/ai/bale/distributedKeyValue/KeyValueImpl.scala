@@ -21,41 +21,31 @@ class KeyValueImpl(actorSystem: ActorSystem)(implicit ec: ExecutionContext) exte
   )
 
   override def set(request: SetRequest): Future[Ack] = {
-    workerExtension.set(request).map {
-      msg: Ack => msg
-    } recoverWith {
+    workerExtension.set(request).mapTo[Ack] recoverWith {
       case _: Throwable => internalErrorStatus
     }
   }
 
   override def get(request: GetRequest): Future[GetReply] = {
-    workerExtension.get(request).map {
-      msg: GetReply => msg
-    } recoverWith {
+    workerExtension.get(request).mapTo[GetReply] recoverWith {
       case _: Throwable => internalErrorStatus
     }
   }
 
   override def remove(request: RemoveRequest): Future[Ack] = {
-    workerExtension.remove(request).map {
-      msg: Ack => msg
-    } recoverWith {
+    workerExtension.remove(request).mapTo[Ack] recoverWith {
       case _: Throwable => internalErrorStatus
     }
   }
 
   override def increase(request: IncreaseRequest): Future[IncreaseReply] = {
-    workerExtension.increase(request).map {
-      msg: IncreaseReply => msg
-    } recoverWith {
+    workerExtension.increase(request).mapTo[IncreaseReply] recoverWith {
       case _: Throwable => internalErrorStatus
     }
   }
 
   override def snapshot(request: SnapshotRequest): Future[Ack] = {
-    workerExtension.snapshot(request).map {
-      msg: Ack => msg
-    } recoverWith {
+    workerExtension.snapshot(request).mapTo[Ack] recoverWith {
       case _: Throwable => internalErrorStatus
     }
   }
