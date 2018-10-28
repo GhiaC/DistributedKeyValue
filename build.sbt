@@ -1,15 +1,10 @@
 scalaVersion := "2.12.6"
 
-name := "Memcache"
-organization := "me.ghiasi"
+name := "DistributedKeyValue"
+organization := "ai.bale"
 version := "1.0"
 
-//credentials += Credentials(Path.userHome / ".credentials")
-//
-//libraryDependencies ++= Seq(
-//  "ai.bale" %% "lati-core" % "0.1.3"
-//)
-
+credentials += Credentials(Path.userHome / ".credentials")
 
 import sbt.Keys.libraryDependencies
 import scalapb.compiler.Version.grpcJavaVersion
@@ -18,7 +13,15 @@ PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
 
+lazy val root = (project in file("."))
+  .settings(
+    name := "DistributedKeyValue",
+    scalaVersion := "2.12.7"
+  )
+
 libraryDependencies ++= Seq(
+  "ai.bale" %% "lati-core" % "0.1.3",
+  "ai.bale" %% "lati-cli" % "0.1.3",
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
   "io.grpc" % "grpc-alts" % grpcJavaVersion,
   "io.grpc" % "grpc-protobuf" % grpcJavaVersion,
@@ -28,12 +31,6 @@ libraryDependencies ++= Seq(
   "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
   "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
 )
-
-
-//libraryDependencies ++= Seq(
-//  "org.scalactic" %% "scalactic" % "3.0.5",
-////  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-//)
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
@@ -45,8 +42,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster-tools" % "2.5.17",
   "com.typesafe.akka" %% "akka-distributed-data" % "2.5.14",
   "com.typesafe.akka" %% "akka-persistence" % "2.5.14",
-//  "com.typesafe.akka" %% "akka-persistence-cassandra" % "0.87",
-//  "com.typesafe.akka" %% "akka-persistence-cassandra-launcher" % "0.87",
   "com.typesafe.akka" %% "akka-remote" % "2.5.14",
 
   "org.json4s" %% "json4s-native" % "3.6.0",

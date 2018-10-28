@@ -13,7 +13,7 @@ class KeyValue(actorName: String) {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   val service = new KeyValueImpl(system)
-  val randomPort: Int = new Random().nextInt(5000)
+  val randomPort: Int = 25000 //new Random().nextInt(5000)
   ServerBuilder.forPort(randomPort).addService(KeyValueGrpc.bindService(service, ec)).build.start
   system.log.info("GRPC Started on {} port", randomPort)
 }
