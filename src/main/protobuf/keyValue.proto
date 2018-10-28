@@ -46,5 +46,5 @@ message Ack {
 }
 
 message SnapshotRequest {
-    string result = 1;
+    string key = 1;
 }

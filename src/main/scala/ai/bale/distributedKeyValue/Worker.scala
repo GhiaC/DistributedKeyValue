@@ -11,7 +11,9 @@ class Worker extends PersistentActor with ActorLogging {
   private var states = States()
 
   def receiveCommand: Receive = {
-    case SnapshotRequest => saveSnapshot(states)
+    case _: SnapshotRequest =>
+      saveSnapshot(states)
+      sender() ! Ack("Success")
 
     case msg: SetRequest =>
       val replyTo = sender()

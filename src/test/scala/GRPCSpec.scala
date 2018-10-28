@@ -16,6 +16,7 @@ class GRPCSpec extends AsyncFlatSpec {
   it should "check simple set and get request" in simpleSetAndGet
   it should "Result of get after send many increase message" in sendRandomIncrease
   it should "Result of get after send one hundred increase message" in sendOneHundredIncreaseRequest
+  it should "check snapshotRequest" in sendSnapshotRequest
 
 
   def sendOneHundredIncreaseRequest(): Future[Assertion] = {
@@ -63,4 +64,15 @@ class GRPCSpec extends AsyncFlatSpec {
       sendGetRequestAndCompareReply(GetRequest(key), GetReply(Some(value toString)))
     }
   }
+
+  def sendSnapshotRequest(): Future[Assertion] = {
+    val random = new Random()
+    val (key, value) = (random.nextString(3), random.nextString(100))
+    stub.set(SetRequest(key, value.toString)) flatMap { _ =>
+      stub.snapshot(SnapshotRequest(key)) map { response =>
+        assert(response == Ack("Success"))
+      }
+    }
+  }
+
 }

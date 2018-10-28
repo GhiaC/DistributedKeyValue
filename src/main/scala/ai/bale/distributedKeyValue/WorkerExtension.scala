@@ -44,6 +44,7 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
     case msg@RemoveRequest(key) => (getEntityId(key), msg)
     case msg@GetRequest(key) => (getEntityId(key), msg)
     case msg@IncreaseRequest(key) => (getEntityId(key), msg)
+    case msg@SnapshotRequest(key) => (getEntityId(key), msg)
   }
 
   private val extractShardId: ShardRegion.ExtractShardId = {
@@ -51,10 +52,11 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
     case RemoveRequest(key) => (key.hashCode % numberOfShards).toString
     case GetRequest(key) => (key.hashCode() % numberOfShards).toString
     case IncreaseRequest(key) => (key.hashCode() % numberOfShards).toString
+    case SnapshotRequest(key) => (key.hashCode() % numberOfShards).toString
     case ShardRegion.StartEntity(id) => (id.toLong % numberOfShards).toString
   }
 
-  val shardRegion: ActorRef = ClusterSharding(system).start(
+  private val shardRegion: ActorRef = ClusterSharding(system).start(
     typeName = "Worker",
     entityProps = Props[Worker],
     settings = ClusterShardingSettings(system),
