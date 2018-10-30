@@ -18,11 +18,11 @@ class SimpleScenario extends AbstractScenario {
 
   override def scenario()(implicit ec: ExecutionContext): Future[Any] = {
     val random = new Random()
-    val (key, value) = (random.nextString(3), random.nextInt(100))
+    val (key, value) = (random.nextString(3), random.nextInt(20))
     for {
       _ <- client.stub.set(SetRequest(key, value.toString))
-      _ <- client.stub.remove(RemoveRequest(key))
-      _ <- client.stub.get(GetRequest(key))
+//      _ <- client.stub.remove(RemoveRequest(key))
+//      _ <- client.stub.get(GetRequest(key))
     } yield ()
   }
 

@@ -8,7 +8,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import ai.bale.protos.keyValue._
 import akka.pattern._
 import akka.util.Timeout
-
+import java.lang.Math._
 import scala.concurrent.Future
 
 object WorkerExtension
@@ -33,9 +33,9 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
   private def getEntityId(key: String): String = {
     oneKeyPerActor match {
       case "on" =>
-        key.hashCode().toString
+        abs((key + key).hashCode()).toString
       case _ =>
-        (key.hashCode() % numberOfEntity).toString
+        (abs((key + key).hashCode()) % numberOfEntity).toString
     }
   }
 
@@ -63,7 +63,7 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
     extractEntityId = extractEntityId,
     extractShardId = extractShardId)
 
-  implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
+  implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
 
   def set(msg: SetRequest): Future[Ack] = (shardRegion ? msg).mapTo[Ack]
 
