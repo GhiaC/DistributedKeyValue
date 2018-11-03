@@ -46,7 +46,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-distributed-data" % "2.5.17",
   "com.typesafe.akka" %% "akka-remote" % "2.5.17",
   "com.typesafe.akka" %% "akka-persistence" % "2.5.17",
-  "org.slf4j" % "slf4j-log4j12" % "1.2" % Test,
+  "com.typesafe.akka" %% "akka-slf4j" % "2.5.17",
   "com.github.ben-manes.caffeine" % "caffeine" % "2.2.7",
   //  "org.json4s" %% "json4s-native" % "3.6.0",
   "com.okumin" %% "akka-persistence-sql-async" % "0.5.1",
