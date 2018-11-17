@@ -9,7 +9,7 @@ import scala.util.Random
 
 class GRPCSpec extends AsyncFlatSpec {
 
-  private val client = new Client
+  private val client: Client.type = Client
   private val stub: KeyValueGrpc.KeyValueStub = client.stub
   private val blockingStub: KeyValueGrpc.KeyValueBlockingStub = client.blockingStub
 

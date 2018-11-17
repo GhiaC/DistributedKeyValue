@@ -11,8 +11,6 @@ class Worker extends PersistentActor with ActorLogging {
 
   def persistenceId: String = context.self.path.toString
 
-  //  var map = mutable.HashMap.empty[String, Any]
-
   var map: mutable.TreeMap[String, Any] = mutable.TreeMap()
 
   implicit def String2ExtendedString(s: String): ExtendedString = new ExtendedString(s)
@@ -31,17 +29,21 @@ class Worker extends PersistentActor with ActorLogging {
 
     case msg: RemoveRequest =>
       val replyTo = sender()
-      persistAsync(msg) { msg =>
-        map.remove(msg.key)
-        replyTo ! Ack("Removed")
-      }
+      if (map.contains(msg.key)) {
+        persistAsync(msg) { msg =>
+          map.remove(msg.key)
+          replyTo ! Ack("Removed")
+        }
+      }else
+        replyTo ! Ack("Key not Valid")
 
     case msg: IncreaseRequest =>
       val replyTo = sender()
       persistAsync(msg) { msg =>
         map.getOrElse(msg.key, None) match {
           case None =>
-            replyTo ! IncreaseReply(None)
+            map += (msg.key -> 1)
+            replyTo ! IncreaseReply(Some(1.toString))
           case oldValue =>
             if (oldValue.toString.isNumber) {
               val newValue = oldValue.toString.toInt + 1

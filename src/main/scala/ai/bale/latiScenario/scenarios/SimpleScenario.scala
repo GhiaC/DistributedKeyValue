@@ -21,5 +21,6 @@ class SimpleScenario extends AbstractScenario {
   }
 
   override def afterScenario()(implicit ec: ExecutionContext): Future[Any] = Future {
+//    client.channel.shutdown()
   }
 }
