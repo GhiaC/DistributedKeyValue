@@ -1,0 +1,13 @@
+==================================================
+Lati result:
+True scenario per second:  2859.7999999999997 s/s
+False scenario per second: 0.0 s/s
+All true scenarios:        28598.0
+All false scenarios:       0.0
+Users number:              10000
+Duration time:             10000 millisecond
+Scenario number:           0
+==================================================
+System Info :
+    CPU : core i7 6500u
+    RAM : 8g ddr3
