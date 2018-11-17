@@ -4,7 +4,7 @@ import ai.bale.protos.keyValue.KeyValueGrpc
 import com.typesafe.config.{Config, ConfigFactory}
 import io.grpc.{ManagedChannel, ManagedChannelBuilder}
 
-class Client {
+object Client {
   val conf: Config = ConfigFactory.load()
   private val getPort = conf.getInt("tester.GRPCSpec.port")
   private val getHost = conf.getString("tester.GRPCSpec.host")

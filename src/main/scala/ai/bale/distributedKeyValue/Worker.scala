@@ -11,9 +11,9 @@ class Worker extends PersistentActor with ActorLogging {
 
   def persistenceId: String = context.self.path.toString
 
-  //  private var states = States()
+  //  var map = mutable.HashMap.empty[String, Any]
 
-  var map = mutable.HashMap.empty[String, Any]
+  var map: mutable.TreeMap[String, Any] = mutable.TreeMap()
 
   implicit def String2ExtendedString(s: String): ExtendedString = new ExtendedString(s)
 
@@ -24,21 +24,21 @@ class Worker extends PersistentActor with ActorLogging {
 
     case msg: SetRequest =>
       val replyTo = sender()
-      persist(msg) { msg =>
+      persistAsync(msg) { msg =>
         map += (msg.key -> msg.value)
         replyTo ! Ack("Added")
       }
 
     case msg: RemoveRequest =>
       val replyTo = sender()
-      persist(msg) { msg =>
+      persistAsync(msg) { msg =>
         map.remove(msg.key)
         replyTo ! Ack("Removed")
       }
 
     case msg: IncreaseRequest =>
       val replyTo = sender()
-      persist(msg) { msg =>
+      persistAsync(msg) { msg =>
         map.getOrElse(msg.key, None) match {
           case None =>
             replyTo ! IncreaseReply(None)
@@ -47,7 +47,7 @@ class Worker extends PersistentActor with ActorLogging {
               val newValue = oldValue.toString.toInt + 1
               map += (msg.key -> newValue)
               replyTo ! IncreaseReply(Some(newValue.toString))
-            }else
+            } else
               replyTo ! IncreaseReply(Some(oldValue.toString))
         }
       }
@@ -63,7 +63,7 @@ class Worker extends PersistentActor with ActorLogging {
   }
 
   def receiveRecover: Receive = {
-    case SnapshotOffer(_, s: mutable.HashMap[String, Any]) => map = s
+    case SnapshotOffer(_, s: mutable.TreeMap[String, Any]) => map = s
     case msg: SetRequest => map += (msg.key -> msg.value)
     case msg: RemoveRequest => map.remove(msg.key)
     case msg: IncreaseRequest =>

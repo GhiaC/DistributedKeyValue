@@ -7,18 +7,13 @@ version := "1.0"
 credentials += Credentials(Path.userHome / ".credentials")
 
 import sbt.Keys.libraryDependencies
-//import scalapb.compiler.Version.grpcJavaVersion
+import scalapb.compiler.Version.grpcJavaVersion
 
 PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
 
-lazy val root = (project in file("."))
-  .settings(
-    name := "DistributedKeyValue",
-    scalaVersion := "2.12.7"
-  )
-
+enablePlugins(JavaAppPackaging)
 
 libraryDependencies ++= Seq(
   "ai.bale" %% "lati-core" % "0.1.3",

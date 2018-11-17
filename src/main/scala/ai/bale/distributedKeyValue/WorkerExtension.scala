@@ -24,11 +24,11 @@ object WorkerExtension
 
 class WorkerExtension(system: ExtendedActorSystem) extends Extension {
   val conf: Config = ConfigFactory.load()
-  private val numberOfEntity = conf.getInt("cluster-sharding.number-of-entity")
+  private val numberOfEntity = conf.getInt("server.cluster-sharding.number-of-entity")
 
-  private val oneKeyPerActor = conf.getString("cluster-sharding.one-key-per-actor")
+  private val oneKeyPerActor = conf.getString("server.cluster-sharding.one-key-per-actor")
 
-  private val numberOfShards = conf.getInt("cluster-sharding.number-of-shards")
+  private val numberOfShards = conf.getInt("server.cluster-sharding.number-of-shards")
 
   private def getEntityId(key: String): String = {
     oneKeyPerActor match {
@@ -37,6 +37,10 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
       case _ =>
         (abs((key + key).hashCode()) % numberOfEntity).toString
     }
+  }
+
+  private def getShardId(key: String): String = {
+    math.abs(key.hashCode % numberOfShards).toString
   }
 
   private val extractEntityId: ShardRegion.ExtractEntityId = {
@@ -48,12 +52,11 @@ class WorkerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   private val extractShardId: ShardRegion.ExtractShardId = {
-    case SetRequest(key, _) => (key.hashCode() % numberOfShards).toString
-    case RemoveRequest(key) => (key.hashCode % numberOfShards).toString
-    case GetRequest(key) => (key.hashCode() % numberOfShards).toString
-    case IncreaseRequest(key) => (key.hashCode() % numberOfShards).toString
-    case SnapshotRequest(key) => (key.hashCode() % numberOfShards).toString
-    case ShardRegion.StartEntity(id) => (id.toLong % numberOfShards).toString
+    case SetRequest(key, _) => getShardId(key)
+    case RemoveRequest(key) => getShardId(key)
+    case GetRequest(key) => getShardId(key)
+    case IncreaseRequest(key) => getShardId(key)
+    case SnapshotRequest(key) => getShardId(key)
   }
 
   private val shardRegion: ActorRef = ClusterSharding(system).start(

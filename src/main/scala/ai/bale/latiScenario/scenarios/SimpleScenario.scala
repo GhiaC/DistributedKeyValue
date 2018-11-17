@@ -9,26 +9,17 @@ import scala.util.Random
 
 class SimpleScenario extends AbstractScenario {
 
-  var client: Client = _
+  var client: Client.type = _
 
   override def beforeScenario()(implicit ec: ExecutionContext): Future[Any] = Future {
-    client = new Client
-    Future.successful()
+    client = Client
   }
 
   override def scenario()(implicit ec: ExecutionContext): Future[Any] = {
-    val random = new Random()
-    val (key, value) = (random.nextString(3), random.nextInt(20))
-    for {
-      _ <- client.stub.set(SetRequest(key, value.toString))
-//      _ <- client.stub.remove(RemoveRequest(key))
-//      _ <- client.stub.get(GetRequest(key))
-    } yield ()
+    val (key, value) = (Random.alphanumeric.take(20).mkString, "1")
+    client.stub.set(SetRequest(key, value.toString))
   }
 
-
-  override def afterScenario()(implicit ec: ExecutionContext): Future[Any] = {
-    client.channel.shutdown()
-    Future.successful()
+  override def afterScenario()(implicit ec: ExecutionContext): Future[Any] = Future {
   }
 }
